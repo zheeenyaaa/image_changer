@@ -1,5 +1,7 @@
-﻿from PIL import Image, ImageTk
+﻿from imghdr import what
+from PIL import Image, ImageTk
 import tkinter as tk
+from random import randint
 
 # logo = Image.open("logo.png")
 
@@ -15,6 +17,8 @@ import tkinter as tk
 
 
 click_points = {}
+min_d = 5
+max_d = 10
 
 
 def on_click(event):
@@ -45,17 +49,49 @@ def getPoints(userImg: str) -> None:
 
 
 def main():
-    getPoints("capibara.jpg")
-    # x = int(input("Введите координату x: "))
-    # y = int(input("Введите координату y: "))
-    # print(x, y)
+    what_image = input("Какое изображение вы хотите исковеркать: ") + ".jpg"
+    getPoints(what_image)
+ 
+    left_top = click_points[1]
+    right_top = click_points[2]
+    right_bottom = click_points[3]
+    left_bottom = click_points[4]
 
-    # img = Image.open("capibara.jpg")
-    # crop = img.crop((x, y, x+100, y+100))  # (left, top, right, bottom)
-    # crop.save("fragment.jpg")
-    # img.paste(crop, (200, 300))
-    # img.save("new_img.jpg")
+    width = abs(left_top[0] - right_bottom[0])
+    height = abs(right_top[1] - left_bottom[1])
 
-    print(click_points)
+    x_range = [left_top[0], left_top[0] + width]
+    y_range = [left_top[1], left_top[1] + height]
+
+    # print(f"Левый верхний: {left_top}")
+    # print(f"Правый верхний: {right_top}")
+    # print(f"Правый нижний: {right_bottom}")
+    # print(f"Левый нижний: {left_bottom}")
+
+    print("Ширина ", width)
+    print("Высота", height)
+
+    print("x range ", x_range)
+    print("y range ", y_range)
+
+    img = Image.open(what_image)
+
+    for _ in range(randint(500, 700)):
+        random_ejection = randint(50, 100)
+
+        left_x = randint(x_range[0] - random_ejection, x_range[1] + random_ejection)
+        left_y = randint(y_range[0] - random_ejection, y_range[1] + random_ejection)
+
+        diameter = randint(5, 15)
+
+        crop = img.crop((left_x, left_y, left_x + diameter, left_y + diameter))  # (left, top, right, bottom)
+        crop.save("fragment.jpg")
+
+        paste_x = randint(x_range[0] - random_ejection, x_range[1] + random_ejection)
+        paste_y = randint(y_range[0] - random_ejection, y_range[1] + random_ejection)
+        img.paste(crop, (paste_x, paste_y))
+        img.save(f"new_{what_image[:-4]}.jpg")
+
+
 if __name__ == "__main__":
     main()
