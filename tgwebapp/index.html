@@ -1,0 +1,19 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>Mini Telegram App</title>
+</head>
+<body>
+  <h2>Загрузите фото</h2>
+  <form action="/upload" method="post" enctype="multipart/form-data">
+      <input type="file" name="photo">
+      <button type="submit">Отправить</button>
+  </form>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand(); // Развернуть на весь экран
+  </script>
+</body>
+</html>

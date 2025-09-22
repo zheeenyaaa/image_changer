@@ -82,7 +82,7 @@ def main():
         left_x = randint(x_range[0] - random_ejection, x_range[1] + random_ejection)
         left_y = randint(y_range[0] - random_ejection, y_range[1] + random_ejection)
 
-        diameter = randint(5, 15)
+        diameter = randint(5, 35)
 
         crop = img.crop((left_x, left_y, left_x + diameter, left_y + diameter))  # (left, top, right, bottom)
         crop.save("fragment.jpg")
