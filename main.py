@@ -1,97 +1,147 @@
-﻿from imghdr import what
-from PIL import Image, ImageTk
+﻿import sys
+from pathlib import Path
+
+try:
+    from PIL import Image, ImageTk
+except ImportError as exc:
+    print("Не установлен Pillow. Установите командой: pip install pillow", file=sys.stderr)
+    raise
+
 import tkinter as tk
-from random import randint
-
-# logo = Image.open("logo.png")
-
-# logo = logo.resize((100, 100))
+from tkinter import messagebox
 
 
-# background.paste(logo, (50, 50), logo)
+class RectangleSelector:
+    def __init__(self, root: tk.Tk, image_path: Path) -> None:
+        self.root = root
+        self.image_path = image_path
 
-# # Сохраняем результат
-# background.save("result.jpg")
+        self.root.title("Выделение области на изображении")
 
-# img = Image.open("capibara.jpg")
+        self.image = Image.open(self.image_path)
+        self.photo = ImageTk.PhotoImage(self.image)
+
+        self.info_label = tk.Label(
+            self.root,
+            text="Выделите прямоугольную область мышью на изображении",
+            anchor="w"
+        )
+        self.info_label.pack(fill="x", padx=8, pady=(8, 4))
+
+        self.canvas = tk.Canvas(
+            self.root,
+            width=self.photo.width(),
+            height=self.photo.height(),
+            highlightthickness=0,
+            background="#000000"
+        )
+        self.canvas.pack(padx=8, pady=8)
+
+        # Отрисовать изображение как фон канвы
+        self.canvas_img = self.canvas.create_image(0, 0, anchor="nw", image=self.photo)
+
+        # Состояние выделения
+        self.start_x: int | None = None
+        self.start_y: int | None = None
+        self.rect_id: int | None = None
+
+        # Координаты результата (левая-верхняя и правая-нижняя точки)
+        self.x1: int | None = None
+        self.y1: int | None = None
+        self.x2: int | None = None
+        self.y2: int | None = None
+
+        # Привязка событий мыши
+        self.canvas.bind("<ButtonPress-1>", self.on_button_press)
+        self.canvas.bind("<B1-Motion>", self.on_mouse_move)
+        self.canvas.bind("<ButtonRelease-1>", self.on_button_release)
+
+    def on_button_press(self, event: tk.Event) -> None:
+        self.start_x, self.start_y = event.x, event.y
+        self.x1, self.y1, self.x2, self.y2 = None, None, None, None
+        # Удалить предыдущее выделение, если было
+        if self.rect_id is not None:
+            self.canvas.delete(self.rect_id)
+            self.rect_id = None
+
+        # Создать новый прямоугольник
+        self.rect_id = self.canvas.create_rectangle(
+            self.start_x,
+            self.start_y,
+            self.start_x,
+            self.start_y,
+            outline="#39a0ff",
+            width=2,
+            dash=(6, 4),
+            fill="",
+        )
+
+    def on_mouse_move(self, event: tk.Event) -> None:
+        if self.rect_id is None or self.start_x is None or self.start_y is None:
+            return
+        # Обновляем второй угол
+        cur_x, cur_y = event.x, event.y
+        # Ограничим диапазоном изображения
+        cur_x = max(0, min(cur_x, self.photo.width()))
+        cur_y = max(0, min(cur_y, self.photo.height()))
+        self.canvas.coords(self.rect_id, self.start_x, self.start_y, cur_x, cur_y)
+
+    def on_button_release(self, event: tk.Event) -> None:
+        if self.rect_id is None or self.start_x is None or self.start_y is None:
+            return
+        end_x, end_y = event.x, event.y
+        end_x = max(0, min(end_x, self.photo.width()))
+        end_y = max(0, min(end_y, self.photo.height()))
+
+        x1, y1 = min(self.start_x, end_x), min(self.start_y, end_y)
+        x2, y2 = max(self.start_x, end_x), max(self.start_y, end_y)
+
+        # Минимальный размер для валидного прямоугольника
+        if (x2 - x1) < 2 or (y2 - y1) < 2:
+            messagebox.showinfo("Мало точек", "Слишком маленькое выделение. Повторите попытку.")
+            return
+
+        self.x1, self.y1, self.x2, self.y2 = int(x1), int(y1), int(x2), int(y2)
+
+        # Вывести 4 угла в консоль
+        points = (
+            (self.x1, self.y1),
+            (self.x2, self.y1),
+            (self.x2, self.y2),
+            (self.x1, self.y2),
+        )
+        print("Координаты прямоугольника (x, y):")
+        for p in points:
+            print(p)
+
+    def run(self) -> None:
+        self.root.mainloop()
 
 
-click_points = {}
-min_d = 5
-max_d = 10
+def main() -> None:
+
+    filename = input("Введите имя файла изображения (например, awa.jpg): ").strip()
+    filename = Path("./img/without").resolve() / filename
 
 
-def on_click(event):
-    click_index = len(click_points) + 1
-    click_points[click_index] = (event.x, event.y)
+    image_path = Path(filename)
+    if not image_path.is_file():
+        # Попробуем поискать рядом с текущим скриптом
+        alt_path = Path(__file__).resolve().parent / filename
+        if alt_path.is_file():
+            image_path = alt_path
+        else:
+            print(f"Файл не найден: {filename}")
+            return
 
-    r = 2
-    canvas = event.widget
-    canvas.create_oval(event.x - r, event.y - r, event.x + r, event.y + r, fill="red", outline="")
+    print("Откроется окно. Выделите прямоугольную область на изображении мышью.")
 
-    if click_index >= 4:
-        canvas.after(100, canvas.winfo_toplevel().destroy)
-
-def getPoints(userImg: str) -> None:
     root = tk.Tk()
-    root.title("Выбор точки на изображении")
-    click_points.clear()
-    img = Image.open(userImg)
-    tk_img = ImageTk.PhotoImage(img)
-
-    canvas = tk.Canvas(root, width=img.width, height=img.height)
-    canvas.pack()
-    canvas.create_image(0, 0, anchor="nw", image=tk_img)
-    canvas.image = tk_img
-
-    canvas.bind("<Button-1>", on_click)
-    root.mainloop()
-
-
-def main():
-    what_image = input("Какое изображение вы хотите исковеркать: ") + ".jpg"
-    getPoints(what_image)
- 
-    left_top = click_points[1]
-    right_top = click_points[2]
-    right_bottom = click_points[3]
-    left_bottom = click_points[4]
-
-    width = abs(left_top[0] - right_bottom[0])
-    height = abs(right_top[1] - left_bottom[1])
-
-    x_range = [left_top[0], left_top[0] + width]
-    y_range = [left_top[1], left_top[1] + height]
-
-    # print(f"Левый верхний: {left_top}")
-    # print(f"Правый верхний: {right_top}")
-    # print(f"Правый нижний: {right_bottom}")
-    # print(f"Левый нижний: {left_bottom}")
-
-    print("Ширина ", width)
-    print("Высота", height)
-
-    print("x range ", x_range)
-    print("y range ", y_range)
-
-    img = Image.open(what_image)
-
-    for _ in range(randint(500, 700)):
-        random_ejection = randint(50, 100)
-
-        left_x = randint(x_range[0] - random_ejection, x_range[1] + random_ejection)
-        left_y = randint(y_range[0] - random_ejection, y_range[1] + random_ejection)
-
-        diameter = randint(5, 35)
-
-        crop = img.crop((left_x, left_y, left_x + diameter, left_y + diameter))  # (left, top, right, bottom)
-        crop.save("fragment.jpg")
-
-        paste_x = randint(x_range[0] - random_ejection, x_range[1] + random_ejection)
-        paste_y = randint(y_range[0] - random_ejection, y_range[1] + random_ejection)
-        img.paste(crop, (paste_x, paste_y))
-        img.save(f"new_{what_image[:-4]}.jpg")
+    app = RectangleSelector(root, image_path)
+    app.run()
 
 
 if __name__ == "__main__":
     main()
+
+
