@@ -1,19 +1,38 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <title>Mini Telegram App</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Выделение области на изображении</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    /* Фолбэк, если styles.css не загрузится */
+    body { margin: 0; font-family: system-ui, Arial; background: #111; color: #eee; }
+  </style>
+  
 </head>
 <body>
-  <h2>Загрузите фото</h2>
-  <form action="/upload" method="post" enctype="multipart/form-data">
-      <input type="file" name="photo">
-      <button type="submit">Отправить</button>
-  </form>
+  <div id="app">
+    <header class="app-header">
+      <h1>Выделите прямоугольную область</h1>
+    </header>
+    <main class="canvas-wrap">
+      <div class="image-stage" id="imageStage">
+        <img id="sourceImage" src="../awa.jpg" alt="awa" draggable="false"/>
+        <div id="selection" class="selection hidden"></div>
+      </div>
+      <div class="info" id="info"></div>
+    </main>
+    <footer class="app-footer">
+      <button id="resetBtn" class="btn">Сбросить</button>
+    </footer>
+  </div>
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand(); // Развернуть на весь экран
+    const tg = window.Telegram?.WebApp;
+    tg && tg.expand();
   </script>
+  <script src="./script.js"></script>
 </body>
 </html>

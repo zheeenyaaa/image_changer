@@ -1,37 +1,24 @@
-﻿from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+﻿from pathlib import Path
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 
-app = FastAPI()
+BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_DIR = Path("../").resolve()
+WEB_DIR = Path(__file__).resolve().parent
 
-@app.get("/", response_class=HTMLResponse)
-async def index():
-    return """
-    <!doctype html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Mini App — Привет, мир</title>
-        <script src="https://telegram.org/js/telegram-web-app.js"></script>
-        <style>
-          body { font-family: system-ui, Arial; padding: 20px; }
-          button { font-size: 16px; padding: 8px 12px; border-radius: 6px; }
-        </style>
-      </head>
-      <body>
-        <h1>Привет, мир 👋</h1>
-        <p>Это тестовая страница Mini App, запущенная на локальном сервере.</p>
-        <button id="closeBtn">Закрыть WebApp</button>
+print(PROJECT_DIR)
 
-        <script>
-          const tg = window.Telegram?.WebApp;
-          if (tg) {
-            tg.expand();
-            document.getElementById('closeBtn').onclick = () => tg.close();
-          } else {
-            // Если страница открыта в браузере (а не в Telegram)
-            document.getElementById('closeBtn').onclick = () => alert('Откройте эту страницу через кнопку бота в Telegram');
-          }
-        </script>
-      </body>
-    </html>
-    """
+app = FastAPI(title="Image Region Selector")
+img_path = PROJECT_DIR / "awa.jpg"
+print(img_path)
+
+
+# Раздаём статические файлы tgwebapp (index.html, styles.css, script.js)
+app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
+
+# Явный роут для картинки из корня проекта (awa.jpg)
+@app.get("/")
+async def get_awa():
+    
+    return FileResponse(str(img_path))

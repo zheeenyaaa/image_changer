@@ -1,0 +1,31 @@
+/* Базовая раскладка */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: #0f0f10; color: #eaeaea; font-family: system-ui, Arial, sans-serif; }
+
+#app { display: grid; grid-template-rows: auto 1fr auto; min-height: 100vh; }
+.app-header, .app-footer { padding: 12px 16px; background: #141416; border-bottom: 1px solid #242428; }
+.app-footer { border-top: 1px solid #242428; border-bottom: none; display: flex; gap: 12px; }
+.app-header h1 { margin: 0; font-size: 16px; font-weight: 600; }
+
+.btn { background: #2b6cb0; color: #fff; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; }
+.btn:hover { background: #2c5282; }
+
+/* Сцена изображения */
+.canvas-wrap { position: relative; padding: 12px 16px; }
+.image-stage { position: relative; margin: 0 auto; max-width: min(100%, 900px); border-radius: 12px; overflow: hidden; background: #0b0b0c; border: 1px solid #242428; }
+.image-stage img { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; touch-action: none; }
+
+/* Прямоугольник выделения */
+.selection { position: absolute; border: 2px dashed rgba(255,255,255,0.9); background: rgba(59,130,246,0.15); backdrop-filter: saturate(120%) brightness(110%); pointer-events: none; }
+.selection.hidden { display: none; }
+
+/* Инфо */
+.info { margin-top: 8px; font-size: 13px; color: #b9b9bf; }
+
+/* Мелкие устройства с вырезом */
+@supports(padding:max(0px)) {
+  body { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+
