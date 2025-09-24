@@ -1,15 +1,13 @@
 ﻿import sys
+import os
 from pathlib import Path
-
-try:
-    from PIL import Image, ImageTk
-except ImportError as exc:
-    print("Не установлен Pillow. Установите командой: pip install pillow", file=sys.stderr)
-    raise
-
+from PIL import Image, ImageTk
 import tkinter as tk
 from tkinter import messagebox
+from random import randint
 
+images_path = Path("./img/without").resolve()
+new_images_path = Path("./img/with").resolve()
 
 class RectangleSelector:
     def __init__(self, root: tk.Tk, image_path: Path) -> None:
@@ -113,35 +111,106 @@ class RectangleSelector:
         print("Координаты прямоугольника (x, y):")
         for p in points:
             print(p)
+        # Завершаем цикл Tk, чтобы метод run() мог вернуть координаты
+        self.root.quit()
 
-    def run(self) -> None:
+    def run(self):
         self.root.mainloop()
+        # После выхода из цикла возвращаем точки, если они заданы
+        if None not in (self.x1, self.y1, self.x2, self.y2):
+            pts = (
+                (self.x1, self.y1),
+                (self.x2, self.y1),
+                (self.x2, self.y2),
+                (self.x1, self.y2),
+            )
+            try:
+                self.root.destroy()
+            except Exception:
+                pass
+            return pts
+        try:
+            self.root.destroy()
+        except Exception:
+            pass
+        return None
+
+
+def make_change(name = "", points = None):
+    if points is None:
+        points = []
+ 
+    left_top = points[0]
+    right_top = points[1]
+    right_bottom = points[2]
+    left_bottom = points[3]
+
+    width = abs(left_top[0] - right_bottom[0])
+    height = abs(right_top[1] - left_bottom[1])
+
+    x_range = [left_top[0], left_top[0] + width]
+    y_range = [left_top[1], left_top[1] + height]
+
+    # print(f"Левый верхний: {left_top}")
+    # print(f"Правый верхний: {right_top}")
+    # print(f"Правый нижний: {right_bottom}")
+    # print(f"Левый нижний: {left_bottom}")
+
+    print("Ширина ", width)
+    print("Высота", height)
+
+    print("x range ", x_range)
+    print("y range ", y_range)
+
+    img = Image.open(images_path / name)
+
+    for _ in range(randint(1000, 2000)):
+        random_ejection = randint(20, 30)
+
+        left_x = randint(x_range[0] - random_ejection, x_range[1] + random_ejection)
+        left_y = randint(y_range[0] - random_ejection, y_range[1] + random_ejection)
+
+        diameter = randint(3, 10)
+
+        crop = img.crop((left_x, left_y, left_x + diameter, left_y + diameter))  # (left, top, right, bottom)
+
+
+        paste_x = randint(x_range[0] - random_ejection, x_range[1] + random_ejection)
+        paste_y = randint(y_range[0] - random_ejection, y_range[1] + random_ejection)
+        img.paste(crop, (paste_x, paste_y))
+        img.save(new_images_path / f"new_{name}")
 
 
 def main() -> None:
+    
+    image_list = list(map(lambda x: x[:-4], os.listdir(images_path)))
 
-    filename = input("Введите имя файла изображения (например, awa.jpg): ").strip()
-    filename = Path("./img/without").resolve() / filename
+    print("Какое изображение вы хотите использовать:\n")
+    for ind, image_name in enumerate(image_list):
+        print(f"{ind+1}. {image_name}")
+
+    image_number = int(input("Введите номер изображения: "))
+    image_name = image_list[image_number - 1] + ".jpg"
+    image_path = images_path / image_name
 
 
-    image_path = Path(filename)
-    if not image_path.is_file():
-        # Попробуем поискать рядом с текущим скриптом
-        alt_path = Path(__file__).resolve().parent / filename
-        if alt_path.is_file():
-            image_path = alt_path
-        else:
-            print(f"Файл не найден: {filename}")
-            return
 
     print("Откроется окно. Выделите прямоугольную область на изображении мышью.")
 
     root = tk.Tk()
     app = RectangleSelector(root, image_path)
-    app.run()
+    
+    points = app.run()
+    if points is not None:
+        print("Точки из main():", points)
+    else:
+        print("Прямоугольник не был выбран.")
+
+    make_change(name = image_name, points = points)
 
 
 if __name__ == "__main__":
     main()
+
 
 
