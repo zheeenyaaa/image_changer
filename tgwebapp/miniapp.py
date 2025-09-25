@@ -1,6 +1,7 @@
 ﻿from telebot import TeleBot, types
+from configs import TOKEN
 
-bot = TeleBot("8393109659:AAGHCUHAPGUHGm917epEtRaR7h7_C8AKHP8")  # вставьте токен вашего бота
+bot = TeleBot(TOKEN)  # вставьте токен вашего бота
 
 @bot.message_handler(commands=['start'])
 def start(msg):
